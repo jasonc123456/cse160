@@ -28,11 +28,17 @@ function drawVector(v, color){
   ctx.stroke();
 }
 function handleDrawEvent(){
-  const x = parseFloat(document.getElementById('xCoord').value);
-  const y = parseFloat(document.getElementById('yCoord').value);
-  if (isNaN(x) || isNaN(y)) return;
+  const x1 = parseFloat(document.getElementById('x1Coord').value);
+  const y1 = parseFloat(document.getElementById('y1Coord').value);
+  if (isNaN(x1) || isNaN(y1)) return;
+  if(!isNaN(document.getElementById('x2Coord').value) && !isNaN(document.getElementById('x2Coord').value)){
+    const x2 = parseFloat(document.getElementById('x2Coord').value);
+    const y2 = parseFloat(document.getElementById('y2Coord').value);
+    const v2 = new Vector3([x2, y2, 0]);
+    drawVector(v2, "red");
+  }
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  const v1 = new Vector3([x, y, 0]);
+  const v1 = new Vector3([x1, y1, 0]);
   drawVector(v1, "red");
 }
