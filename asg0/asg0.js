@@ -9,8 +9,20 @@ function main() {
 
   // Get the rendering context for 2DCG
   var ctx = canvas.getContext('2d');
-
+  const v1 = new Vector3([2.25, 2.25, 0]);
   // Draw a blue rectangle
-  ctx.fillStyle = 'rgba(0, 0, 255, 1.0)'; // Set color to blue
-  ctx.fillRect(120, 10, 150, 150);        // Fill a rectangle with the color
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, 400, 400);        // Fill a rectangle with the color 400 x 400
+}
+function drawVector(v, color){
+  const canvasWidth = 400;
+  const canvasHeight = 400;
+  const xOrigin = canvasWidth / 2;
+  const yOrigin = canvasHeight / 2;
+  const scaleFactor = 20;
+  const x1 = xOrigin + v1.elements[0] * scaleFactor;
+  const y1 = yOrigin - v1.elements[1] * scaleFactor;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(xOrigin,yOrigin);
 }
