@@ -13,6 +13,7 @@ function main() {
   // Draw a blue rectangle
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, 400, 400);        // Fill a rectangle with the color 400 x 400
+  drawVector(v1, "red");
 }
 function drawVector(v, color){
   const canvasWidth = 400;
@@ -25,4 +26,6 @@ function drawVector(v, color){
   ctx.strokeStyle = color;
   ctx.beginPath();
   ctx.moveTo(xOrigin,yOrigin);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
 }
