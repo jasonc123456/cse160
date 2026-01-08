@@ -70,5 +70,21 @@ function handleDrawOperationEvent(){
     const v3 = new Vector3([x1, y1, 0]);
     v3.sub(v2);
     drawVector(v3, "green");
+  }else if(operation == "mul"){
+    if(isNaN(scalar)) return;
+    const v3 = new Vector3([x1, y1, 0]);
+    const v4 = new Vector3([x2, y2, 0]);
+    v3.mul(scalar);
+    v4.mul(scalar);
+    drawVector(v3, "green");
+    drawVector(v4, "green");
+  }else if(operation == "div"){
+    if(isNaN(scalar)) return;
+    const v3 = new Vector3([x1, y1, 0]);
+    const v4 = new Vector3([x2, y2, 0]);
+    v3.div(scalar);
+    v4.div(scalar);
+    drawVector(v3, "green");
+    drawVector(v4, "green");
   }
 }
