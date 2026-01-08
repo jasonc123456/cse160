@@ -73,9 +73,9 @@ class Vector3 {
     div(scalar) {
         // Insert your code here.
         // This function should change this vector (this.elements) and not create a new vector.
-        this.elements[0] /= other.elements[0];
-        this.elements[1] /= other.elements[1];
-        this.elements[2] /= other.elements[2];
+        this.elements[0] /= scalar;
+        this.elements[1] /= scalar;
+        this.elements[2] /= scalar;
         // Don't delete the return statement.
         return this;
     };
@@ -87,9 +87,9 @@ class Vector3 {
     mul(scalar) {
         // Insert your code here.
         // This function should change this vector (this.elements) and not create a new vector.
-        this.elements[0] *= other.elements[0];
-        this.elements[1] *= other.elements[1];
-        this.elements[2] *= other.elements[2];
+        this.elements[0] *= scalar;
+        this.elements[1] *= scalar;
+        this.elements[2] *= scalar;
         // Don't delete the return statement.
         return this;
     };
