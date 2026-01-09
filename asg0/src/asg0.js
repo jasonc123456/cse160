@@ -93,6 +93,11 @@ function handleDrawOperationEvent(){
     if(cosAlpha < -1) cosAlpha = -1;
     const angleDegree = Math.acos(cosAlpha) * 180 / Math.PI;
     console.log("Angle Between (Degrees)", angleDegree);
+  }else if(operation == "cro"){
+    const crossVector = Vector3.cross(v1, v2);
+    const parallelogramArea = crossVector.magnitude();
+    const triangleArea = parallelogramArea / 2;
+    console.log("Area of triangle =", triangleArea);
   }else if(operation == "mag"){
     console.log("v1 magnitude =", v1.magnitude());
     console.log("v2 magnitude =", v2.magnitude());
