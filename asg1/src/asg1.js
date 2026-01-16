@@ -31,6 +31,13 @@ let selectedCircleSegments = 12;
 let shapes = [];
 function setupWebGl(){
   canvas = document.getElementById("webgl");
+  gl = canvas.getContext("webgl", {preserveDrawingBuffer: true});
+  if(!gl){
+    console.log("Failed to get WebGL context");
+    return;
+  }
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
 }
 function main() {
   // Retrieve <canvas> element
