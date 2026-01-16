@@ -45,17 +45,17 @@ function connectVariablesToGlsl(){
     return;
   }
   aPosition = gl.getAttribLocation(gl.program, "a_Position");
-  if (aPosition < 0){
+  if(aPosition < 0){
     console.log("Failed to get attribute location: a_Position");
     return;
   }
   uFragColor = gl.getUniformLocation(gl.program, "u_FragColor");
-  if (!uFragColor){
+  if(!uFragColor){
     console.log("Failed to get uniform location: u_FragColor");
     return;
   }
   uPointSize = gl.getUniformLocation(gl.program, "u_PointSize");
-  if (!uPointSize){
+  if(!uPointSize){
     console.log("Failed to get uniform location: u_PointSize");
     return;
   }
