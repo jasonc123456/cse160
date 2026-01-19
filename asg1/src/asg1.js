@@ -318,6 +318,22 @@ function drawMinecraftDiamondSword(){
     put(guardC - 2, r, outline);
     put(guardC + 2, r, outline);
   }
+  const initialsA = [0.90, 0.90, 0.95, 1.0];
+  const initialsB = [0.60, 0.60, 0.75, 1.0];
+  const initialsCol = 30;
+  const initialsRow = 34;
+  function drawLetterJ(col0, row0){
+    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 0, initialsA, initialsB);
+    for (let dy = 1; dy < 5; dy++) putTwoTone(col0 + 4, row0 + dy, initialsA, initialsB);
+    for (let dx = 1; dx < 4; dx++) putTwoTone(col0 + dx, row0 + 5, initialsA, initialsB);
+    putTwoTone(col0 + 0, row0 + 4, initialsA, initialsB);
+    putTwoTone(col0 + 1, row0 + 4, initialsA, initialsB);
+  }
+  function drawLetterC(col0, row0){
+    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 0, initialsA, initialsB);
+    for (let dy = 1; dy < 5; dy++) putTwoTone(col0 + 0, row0 + dy, initialsA, initialsB);
+    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 5, initialsA, initialsB);
+  }
+  drawLetterJ(initialsCol, initialsRow);
+  drawLetterC(initialsCol + 6, initialsRow);
 }
-
-
