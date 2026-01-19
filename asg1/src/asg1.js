@@ -238,6 +238,7 @@ function addRectTriangles(targetList, x0, y0, x1, y1, color){
   targetList.push(new RawTriangle([x0, y0,  x1, y0,  x1, y1], color));
   targetList.push(new RawTriangle([x0, y0,  x1, y1,  x0, y1], color));
 }
+//Referenced AI input on how to edit 
 function drawMinecraftDiamondSword() {
   pictureShapes = [];
   // Grid area
@@ -259,10 +260,13 @@ function drawMinecraftDiamondSword() {
     addRectTriangles(pictureShapes, p[0], p[1], p[2], p[3], color);
   }
   const baseCol = 22;
-  const baseRow = 30;
-  for (let i = 0; i < 16; i++) {
+  const guardR = 22;
+  const guardC = baseCol;
+  const bladeLen = 16;
+  const bladeBaseR = guardR - 1;
+  for(let i = 0; i < bladeLen; i++){
     const c = baseCol;
-    const r = baseRow - i;
+    const r = bladeBaseR - i;
     put(c - 2, r, outline);
     put(c + 2, r, outline);
     put(c - 1, r, bladeLo);
@@ -270,16 +274,13 @@ function drawMinecraftDiamondSword() {
     put(c + 1, r, bladeHi);
   }
   {
-    const tipI = 16;
-    const tipR = baseRow - tipI;
     const tipC = baseCol;
+    const tipR = bladeBaseR - bladeLen;
     put(tipC, tipR, outline);
     put(tipC - 1, tipR + 1, outline);
     put(tipC + 1, tipR + 1, outline);
     put(tipC, tipR + 1, bladeMd);
   }
-  const guardR = baseRow - 12;
-  const guardC = baseCol;
   for (let dx = -3; dx <= 3; dx++) {
     const color = (dx === 0 || dx === -1) ? guardSh : guardAu;
     put(guardC + dx, guardR, color);
