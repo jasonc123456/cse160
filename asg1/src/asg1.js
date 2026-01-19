@@ -279,7 +279,7 @@ function drawMinecraftDiamondSword() {
     put(tipC, tipR + 1, bladeMd);
   }
   const guardR = baseRow - 12;
-  const guardC = baseCol + Math.floor(12 / 2);
+  const guardC = baseCol;
   for (let dx = -3; dx <= 3; dx++) {
     const color = (dx === 0 || dx === -1) ? guardSh : guardAu;
     put(guardC + dx, guardR, color);
