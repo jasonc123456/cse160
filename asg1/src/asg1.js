@@ -18,6 +18,7 @@ var fragmentShaderSource =
   '}';
 // global variables
 let canvas, gl, aPosition, uFragColor, uPointSize;
+let triangleVertexBuffer = null;
 //Brush modes
 const brushSquare = 0;
 const brushTriangle = 1;
@@ -59,6 +60,11 @@ function connectVariablesToGlsl(){
     console.log("Failed to get uniform location: u_Size");
     return;
   }
+  triangleVertexBuffer = gl.createBuffer();
+  if (!triangleVertexBuffer) {
+    console.log("Failed to create shared triangle buffer");
+    return;
+  }
 }
 function renderAllShapes(){
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -92,7 +98,7 @@ function mouseEventToClipSpace(mouseEvent){
   return [clipX, clipY];
 }
 function addActionsForHtmlUi(){
-  document.getElementById("clearButton").onclick = () => {
+  document.getElementById("clearButton").onclick = function () {
     shapes = [];
     renderAllShapes();
   };
@@ -150,11 +156,7 @@ class SquareShape{
 }
 function drawTriangleVertices(vertices){
   const vertexBuffer = gl.createBuffer();
-  if(!vertexBuffer){
-    console.log("Failed to create vertex buffer");
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
   gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(aPosition);
