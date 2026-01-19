@@ -54,9 +54,9 @@ function connectVariablesToGlsl(){
     console.log("Failed to get uniform location: u_FragColor");
     return;
   }
-  uPointSize = gl.getUniformLocation(gl.program, "u_PointSize");
+  uPointSize = gl.getUniformLocation(gl.program, "u_Size");
   if(!uPointSize){
-    console.log("Failed to get uniform location: u_PointSize");
+    console.log("Failed to get uniform location: u_Size");
     return;
   }
 }
