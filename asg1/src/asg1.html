@@ -38,44 +38,48 @@
     </ul>
 
     <hr>
-    <canvas id="webgl" width="400" height="400">
-    Please use a browser that supports "canvas"
-    </canvas>
-    <div class="row">
-      <button id="clearButton">Clear Canvas</button>
-    </div>
-    <div class="row">
-      <label>Drawing Mode:</label>
-      <button id="squareButton">Squares</button>
-      <button id="triButton">Triangles</button>
-      <button id="circleButton">Circles</button>
-    </div>
-    <div class="row">
-      <label>Red</label>
-      <input type="range" id="redSlide" min="0" max="100" value="100"/>
-      <label>Green</label>
-      <input type="range" id="greenSlide" min="0" max="100" value="100"/>
-      <label>Blue</label>
-      <input type="range" id="blueSlide" min="0" max="100" value="100"/>
-    </div>
-    <div class="row">
-      <label>Size</label>
-      <input type="range" id="sizeSlide" min="1" max="40" value="10"/>
-      <label>Segments</label>
-      <input type="range" id="segSlide" min="3" max="60" value="12"/>
-    </div>
-    <div class="row">
-      Bonus Features!
-      <button id="eraserButton">Eraser</button>
-      <label>Eraser</label>
-      <input type="range" id="eraserSlide" min="5" max="60" value="20"/>
-      <span id="eraserVal">20</span>
-      <label>Rotate</label>
-      <input type="range" id="rotSlide" min="0" max="360" value="0"/>
-      <span id="rotVal">0</span>
-    </div>
-    <div class="row">
-      <button id="drawPictureButton">Render My Picture</button>
+    <div class="app">
+      <canvas id="webgl" width="400" height="400">
+      Please use a browser that supports "canvas"
+      </canvas>
+      <div class="panel">
+        <div class="row">
+          <button id="clearButton">Clear Canvas</button>
+        </div>
+        <div class="row">
+          <label>Drawing Mode:</label>
+          <button id="squareButton">Squares</button>
+          <button id="triButton">Triangles</button>
+          <button id="circleButton">Circles</button>
+        </div>
+        <div class="row">
+          <label>Red</label>
+          <input type="range" id="redSlide" min="0" max="100" value="100"/>
+          <label>Green</label>
+          <input type="range" id="greenSlide" min="0" max="100" value="100"/>
+          <label>Blue</label>
+          <input type="range" id="blueSlide" min="0" max="100" value="100"/>
+        </div>
+        <div class="row">
+          <label>Size</label>
+          <input type="range" id="sizeSlide" min="1" max="40" value="10"/>
+          <label>Segments</label>
+          <input type="range" id="segSlide" min="3" max="60" value="12"/>
+        </div>
+        <div class="row">
+          Bonus Features!
+          <button id="eraserButton">Eraser</button>
+          <label>Eraser</label>
+          <input type="range" id="eraserSlide" min="5" max="60" value="20"/>
+          <span id="eraserVal">20</span>
+          <label>Rotate</label>
+          <input type="range" id="rotSlide" min="0" max="360" value="0"/>
+          <span id="rotVal">0</span>
+        </div>
+        <div class="row">
+          <button id="drawPictureButton">Render My Picture</button>
+        </div>
+      </div>
     </div>
 
     <img src="mySketch.jpg" width="400" alt="My sketch reference" />

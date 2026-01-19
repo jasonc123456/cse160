@@ -131,6 +131,9 @@ function addActionsForHtmlUi(){
     drawMinecraftDiamondSword();
     renderAllShapes();
   };
+  document.getElementById("eraserButton").onclick = function () {
+    selectedBrushType = brushEraser;
+  };
   const updateSelectedColorFromSliders = () => {
     const r = document.getElementById("redSlide").value / 100;
     const g = document.getElementById("greenSlide").value / 100;
@@ -147,10 +150,15 @@ function addActionsForHtmlUi(){
   document.getElementById("segSlide").addEventListener("input", (ev) => {
     selectedCircleSegments = Number(ev.target.value);
   });
-  document.getElementById("rotSlide").addEventListener("input", function (ev) {
+  document.getElementById("rotSlide").addEventListener("input", function(ev){
     selectedRotationDeg = Number(ev.target.value);
     document.getElementById("rotVal").innerText = String(selectedRotationDeg);
   });
+  document.getElementById("eraserSlide").addEventListener("input", function(ev){
+    eraserSize = Number(ev.target.value);
+    document.getElementById("eraserVal").innerText = String(eraserSize);
+  });
+  
 }
 function eraseAt(x, y, radiusClip){
   const r2 = radiusClip * radiusClip;
@@ -213,34 +221,6 @@ class TriangleShape{
   }
   render(){
     gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
-
-  const centerX = this.position[0];
-  const centerY = this.position[1];
-  const halfSize = this.size / 200;
-
-  // Base (unrotated) triangle vertices
-  let v0 = [centerX,             centerY + halfSize];
-  let v1 = [centerX - halfSize,  centerY - halfSize];
-  let v2 = [centerX + halfSize,  centerY - halfSize];
-
-  // Rotate around center
-  const rad = degToRad(this.rotationDeg || 0);
-  v0 = rotatePoint(v0[0], v0[1], centerX, centerY, rad);
-  v1 = rotatePoint(v1[0], v1[1], centerX, centerY, rad);
-  v2 = rotatePoint(v2[0], v2[1], centerX, centerY, rad);
-
-  drawTriangleVertices([v0[0], v0[1], v1[0], v1[1], v2[0], v2[1]]);
-  }
-}
-class CircleShape{
-  constructor() {
-    this.position = [0, 0];
-    this.color = [1, 1, 1, 1];
-    this.size = 10;
-    this.segments = 12;
-  }
-  render(){
-    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
     const centerX = this.position[0];
     const centerY = this.position[1];
     const halfSize = this.size / 200;
@@ -254,6 +234,30 @@ class CircleShape{
     v1 = rotatePoint(v1[0], v1[1], centerX, centerY, rad);
     v2 = rotatePoint(v2[0], v2[1], centerX, centerY, rad);
     drawTriangleVertices([v0[0], v0[1], v1[0], v1[1], v2[0], v2[1]]);
+  }
+}
+class CircleShape{
+  constructor() {
+    this.position = [0, 0];
+    this.color = [1, 1, 1, 1];
+    this.size = 10;
+    this.segments = 12;
+  }
+  render(){
+    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
+    const centerX = this.position[0];
+    const centerY = this.position[1];
+    const radius = this.size / 200;
+    const angleStep = (2 * Math.PI) / this.segments;
+    for (let i = 0; i < this.segments; i++){
+      const angle0 = i * angleStep;
+      const angle1 = (i + 1) * angleStep;
+      const x0 = centerX + radius * Math.cos(angle0);
+      const y0 = centerY + radius * Math.sin(angle0);
+      const x1 = centerX + radius * Math.cos(angle1);
+      const y1 = centerY + radius * Math.sin(angle1);
+      drawTriangleVertices([centerX, centerY, x0, y0, x1, y1]);
+    }
   }
 }
 class RawTriangle{
@@ -278,12 +282,12 @@ function makeGridMapper(cols, rows, left, right, bottom, top){
   };
 }
 function addRectTriangles(targetList, x0, y0, x1, y1, color){
-  targetList.push(new RawTriangle([x0, y0,  x1, y0,  x1, y1], color));
-  targetList.push(new RawTriangle([x0, y0,  x1, y1,  x0, y1], color));
+  targetList.push(new RawTriangle([x0, y0, x1, y0, x1, y1], color));
+  targetList.push(new RawTriangle([x0, y0, x1, y1, x0, y1], color));
 }
 function addRectTrianglesTwoTone(list, x0, y0, x1, y1, colorA, colorB){
-  list.push(new RawTriangle([x0, y0,  x1, y0,  x1, y1], colorA));
-  list.push(new RawTriangle([x0, y0,  x1, y1,  x0, y1], colorB));
+  list.push(new RawTriangle([x0, y0, x1, y0, x1, y1], colorA));
+  list.push(new RawTriangle([x0, y0, x1, y1, x0, y1], colorB));
 }
 //Referenced AI input on how to create the drawing 
 function drawMinecraftDiamondSword(){
