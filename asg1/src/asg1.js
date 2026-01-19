@@ -261,23 +261,21 @@ function drawMinecraftDiamondSword() {
   const baseCol = 22;
   const baseRow = 30;
   for (let i = 0; i < 16; i++) {
-    const shift = Math.floor(i / 2);
-    const c = baseCol + shift;
+    const c = baseCol;
     const r = baseRow - i;
     put(c - 2, r, outline);
     put(c + 2, r, outline);
     put(c - 1, r, bladeLo);
-    put(c,     r, bladeMd);
+    put(c, r, bladeMd);
     put(c + 1, r, bladeHi);
   }
   {
-    const tipShift = Math.floor(16 / 2);
-    const tipC = baseCol + tipShift;
-    const tipR = baseRow - 16;
+    const tipI = 16;
+    const tipR = baseRow - tipI;
+    const tipC = baseCol;
     put(tipC, tipR, outline);
     put(tipC - 1, tipR + 1, outline);
     put(tipC + 1, tipR + 1, outline);
-
     put(tipC, tipR + 1, bladeMd);
   }
   const guardR = baseRow - 12;
