@@ -258,73 +258,49 @@ function drawMinecraftDiamondSword() {
     const p = cellToClip(col, row);
     addRectTriangles(pictureShapes, p[0], p[1], p[2], p[3], color);
   }
-  const baseCol = 23;
-  const baseRow = 33;
-  for (let i = 0; i < 18; i++) {
-    const colShift = Math.floor(i / 2);
-    const c = baseCol - colShift;
+  const baseCol = 22;
+  const baseRow = 30;
+  for (let i = 0; i < 16; i++) {
+    const shift = Math.floor(i / 2);
+    const c = baseCol + shift;
     const r = baseRow - i;
     put(c - 2, r, outline);
     put(c + 2, r, outline);
-    put(c - 1, r - 1, outline);
-    put(c + 1, r + 1, outline);
     put(c - 1, r, bladeLo);
     put(c,     r, bladeMd);
     put(c + 1, r, bladeHi);
-    put(c - 2, r - 1, outline);
-    put(c + 2, r + 1, outline);
   }
   {
-    const tipR = baseRow - 18;
-    const tipC = baseCol - Math.floor(18 / 2);
+    const tipShift = Math.floor(16 / 2);
+    const tipC = baseCol + tipShift;
+    const tipR = baseRow - 16;
     put(tipC, tipR, outline);
     put(tipC - 1, tipR + 1, outline);
-    put(tipC + 1, tipR - 1, outline);
+    put(tipC + 1, tipR + 1, outline);
 
     put(tipC, tipR + 1, bladeMd);
-    put(tipC, tipR - 1, bladeHi);
-    put(tipC - 1, tipR, bladeLo);
-    put(tipC + 1, tipR, bladeMd);
   }
-  const guardRow = baseRow - 19;
-  const guardCol = baseCol - Math.floor(19 / 2);
-  for (let dx = -6; dx <= 6; dx++) {
-    const color = (dx % 3 === 0) ? guardSh : guardAu;
-    put(guardCol + dx, guardRow, color);
-    put(guardCol + dx, guardRow + 1, outline);
-    put(guardCol + dx, guardRow - 1, outline);
+  const guardR = baseRow - 12;
+  const guardC = baseCol + Math.floor(12 / 2);
+  for (let dx = -3; dx <= 3; dx++) {
+    const color = (dx === 0 || dx === -1) ? guardSh : guardAu;
+    put(guardC + dx, guardR, color);
   }
-  put(guardCol, guardRow, guardAu);
-  put(guardCol - 1, guardRow + 1, outline);
-  put(guardCol + 1, guardRow - 1, outline);
-  const handleStartRow = guardRow + 1;
+  put(guardC - 4, guardR, outline);
+  put(guardC + 4, guardR, outline);
+  const handleStartR = guardR + 1;
   for (let i = 0; i < 10; i++) {
-    const r = handleStartRow + i;
-    const c = guardCol;
-    put(c - 2, r, outline);
-    put(c + 2, r, outline);
-    put(c - 1, r, handleD);
-    put(c,     r, handleL);
-    put(c + 1, r, handleD);
+    const r = handleStartR + i;
+    put(guardC - 1, r, handleD);
+    put(guardC,     r, handleL);
+    put(guardC + 1, r, handleD);
+    put(guardC - 2, r, outline);
+    put(guardC + 2, r, outline);
   }
-  const pommelRow = handleStartRow + 10;
-  const pommelCol = guardCol;
-  put(pommelCol, pommelRow, pommel);
-  put(pommelCol - 1, pommelRow, outline);
-  put(pommelCol + 1, pommelRow, outline);
-  put(pommelCol, pommelRow + 1, outline);
-  put(pommelCol + 5, pommelRow - 2, guardAu);
-  put(pommelCol + 5, pommelRow - 1, guardAu);
-  put(pommelCol + 5, pommelRow, guardAu);
-  put(pommelCol + 4, pommelRow + 1, guardAu);
-  put(pommelCol + 3, pommelRow + 1, guardAu);
-  put(pommelCol + 8, pommelRow - 2, guardAu);
-  put(pommelCol + 7, pommelRow - 2, guardAu);
-  put(pommelCol + 7, pommelRow - 1, guardAu);
-  put(pommelCol + 7, pommelRow, guardAu);
-  put(pommelCol + 7, pommelRow + 1, guardAu);
-  put(pommelCol + 8, pommelRow + 1, guardAu);
-  put(pommelCol + 2, pommelRow - 3, outline);
-  put(pommelCol + 6, pommelRow - 3, outline);
-  put(pommelCol + 9, pommelRow - 3, outline);
+  const pommelR = handleStartR + 10;
+  put(guardC, pommelR, pommel);
+  put(guardC - 1, pommelR, outline);
+  put(guardC + 1, pommelR, outline);
+  put(guardC, pommelR + 1, outline);
+}
 }
