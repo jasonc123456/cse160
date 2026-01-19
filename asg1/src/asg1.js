@@ -303,4 +303,4 @@ function drawMinecraftDiamondSword() {
   put(guardC + 1, pommelR, outline);
   put(guardC, pommelR + 1, outline);
 }
-}
+
