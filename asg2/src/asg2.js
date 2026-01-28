@@ -1,21 +1,22 @@
 
 // HelloPoint1.js (c) 2012 matsuda
 // Vertex shader program
-var vertexShaderSource = 
-  'attribute vec4 a_Position;'+
-  'uniform float u_Size;'+
-  'void main() {\n' +
-  '  gl_Position = a_Position;\n' + // Set the vertex coordinates of the point
-  '  gl_PointSize = u_Size;' +                    // Set the point size
-  '}';
-
+var VSHADER_SOURCE = `
+  attribute vec4 a_Position;
+  uniform mat4 u_ModelMatrix;
+  uniform mat4 u_GlobalRotateMatrix;
+  void main() {
+    gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
+  }
+`;
 // Fragment shader program
-var fragmentShaderSource =
-  'precision mediump float;'+
-  'uniform vec4 u_FragColor;'+
-  'void main() {' +
-  '  gl_FragColor = u_FragColor;' + // Set the point color
-  '}';
+var fragmentShaderSource = `
+  precision mediump float;
+  uniform vec4 u_FragColor;
+  void main() {
+    gl_FragColor = u_FragColor;
+  }
+`;
 // global variables
 let canvas, gl, aPosition, uFragColor, uPointSize;
 let triangleVertexBuffer = null;
