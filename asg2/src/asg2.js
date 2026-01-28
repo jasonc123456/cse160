@@ -42,6 +42,8 @@ function setupWebGl(){
     console.log("Failed to get WebGL context");
     return;
   }
+  gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+  gl.enable(gl.DEPTH_TEST);
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
 }
