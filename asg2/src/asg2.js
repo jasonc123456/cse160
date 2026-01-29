@@ -27,6 +27,21 @@ let gAnimalGlobalRotation = 0;
 let gHipAngle = 0;
 let gKneeAngle = 0;
 let gAnimationOn = false;
+//UI joint angles for manual movement when animation is off
+let gHipAngleUI = 0;
+let gKneeAngleUI = 0;
+let gAnkleAngleUI = 0;
+//3rd level joint + extra animated parts
+let gAnkleAngle = 0;
+let gHeadYaw = 0;
+let gTailAngle = 0;
+let gEarFlap = 0;
+//mouse control rotation
+let gMouseYaw = 0;
+let gMousePitch = 0;
+//poke animation (shift-click)
+let gPokeStartMs = -1;
+//fps
 let g_lastMs = 0;
 let g_fpsSmoothed = 0;
 //Brush modes
@@ -144,11 +159,11 @@ function drawCube(M, color){
   gl.drawArrays(gl.TRIANGLES, 0, 36);
 }
 function drawSheepLeg(x, z, hipDeg, kneeDeg){
-  // joint at body bottom
+  //joint at body bottom
   const base = new Matrix4();
   base.translate(x, -0.10, z);
   base.rotate(hipDeg, 1, 0, 0);
-  
+
 }
 function handleCanvasDraw(mouseEvent){
   const [clipX, clipY] = mouseEventToClipSpace(mouseEvent);
