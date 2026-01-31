@@ -373,7 +373,8 @@ function tick(nowMs){
 }
 function renderScene(nowMs = performance.now()){
   const pokeActive = isPokeActive(nowMs);
-  const useAnim = gAnimationOn || pokeActive;
+  const headAnim = gAnimationOn || pokeActive;
+  const legAnim  = gAnimationOn;
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   //global rotation uniform: slider + mouse
   const G = new Matrix4();
@@ -421,7 +422,7 @@ function renderScene(nowMs = performance.now()){
   const headFrame = new Matrix4();
   headFrame.set(root);
   headFrame.translate(0.49, 0.26, 0);
-  const headYaw = useAnim ? gHeadYaw : gHeadYawUI;
+  const headYaw = headAnim ? gHeadYaw : gHeadYawUI;
   headFrame.rotate(headYaw, 0, 1, 0);
 
   //wool head block
@@ -474,7 +475,7 @@ function renderScene(nowMs = performance.now()){
   //eyes flat on the face plate, blink by shrinking Y
   {
     const eyeX = 0.279; //slightly in front of plate
-    const blink = useAnim ? gBlink : 0;
+    const blink = headAnim ? gBlink : 0;
     const eyeYScale = 0.035 * (1.0 - 0.95 * blink) + 0.002;
     const E1 = new Matrix4();
     E1.set(headFrame);
@@ -497,7 +498,7 @@ function renderScene(nowMs = performance.now()){
   }
   //mouth
   {
-    const mouthOpen = useAnim ? gMouthOpen : 0;
+    const mouthOpen = headAnim ? gMouthOpen : 0;
     const mouthH = 0.01 + 0.03 * mouthOpen;
     const M = new Matrix4();
     M.set(headFrame);
@@ -508,7 +509,7 @@ function renderScene(nowMs = performance.now()){
   //ears
   {
     const earColor = [0.86, 0.86, 0.86, 1.0]; //slightly darker than head
-    const flap = useAnim ? gEarFlap : 0;
+    const flap = headAnim ? gEarFlap : 0;
     const zOut = 0.20;
     const sx = 0.06; //thickness (X)
     const sy = 0.28; //length (Y)
@@ -537,15 +538,15 @@ function renderScene(nowMs = performance.now()){
     const M = new Matrix4();
     M.set(root);
     M.translate(-0.455, 0.25, 0.00);
-    M.rotate(useAnim ? gTailAngle : 0, 0, 0, 1);
+    M.rotate(headAnim ? gTailAngle : 0, 0, 0, 1);
     M.rotate(140, 0,0,1);
     M.scale(0.10, 0.22, 0.10);
     drawCylinder(M, wool2);
   }
   //joints use only when animation is off
-  const hip = useAnim ? gHipAngle : gHipAngleUI;
-  const knee = useAnim ? gKneeAngle : gKneeAngleUI;
-  const ankle = useAnim ? gAnkleAngle : gAnkleAngleUI;
+  const hip = legAnim ? gHipAngle : gHipAngleUI;
+  const knee = legAnim ? gKneeAngle : gKneeAngleUI;
+  const ankle = legAnim ? gAnkleAngle : gAnkleAngleUI;
   //4 legs, each has 3 levels thigh, calf, hoof
   drawLeg(root,  0.34,  0.22,  hip,  knee, ankle, skin, hoof);
   drawLeg(root,  0.34, -0.22, -hip,  knee, ankle, skin, hoof);
