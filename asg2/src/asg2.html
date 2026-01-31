@@ -20,6 +20,34 @@
       }
       button {margin-right: 6px; margin-top: 4px;}
       .notes {font-size: 0.9em; color: #333;}
+
+      #fpsBox{
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      background: rgba(20,20,20,0.85);
+      color: #eaffea;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-family: monospace;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+    }
+    .fpsTitle{
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+    .fpsValue{
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .msValue{
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
     </style>
     <meta charset="utf-8" />
     <title>Assignment 2</title>
@@ -28,54 +56,52 @@
   <body onload="main()">
     <p>Hei Yat Jason Cheung</p>
     <p>hcheun17@ucsc.edu</p>
-
     <p><strong>Notes to Grader:</strong></p>
     <ul>
-      <li>For the Awesomeness points, I have added a couple extra / bonus features such as the Eraser and Rotation tool(Only work on triangle for now) which make the canvas more usable and can draw more advanced pictures!</li>
+      <!--<li>For the Awesomeness points, I have added a couple extra / bonus features such as the Eraser and Rotation tool(Only work on triangle for now) which make the canvas more usable and can draw more advanced pictures!</li>-->
       <li>CSE160 Assignments Selector: <a href="https://cse160.jasoncheung.dev/" target="_blank">Click Here</a></li>
       <li>Github Repo: <a href="https://github.com/jasonc123456/CSE-160/" target="_blank">Click Here</a></li>
       <!--<li>Test Cases: <a href="https://cse160.jasoncheung.dev/asg0/lib/vectorTests.html" target="_blank">Click Here</a></li>-->
       <li>asg2.js: <a href="https://cse160.jasoncheung.dev/asg2/src/asg2.js" target="_blank">Click Here</a></li>
     </ul>
     <hr>
-    <div class="panel">
+    <div class="app">
+      <canvas id="webgl" width="400" height="400">
+        Please use a browser that supports "canvas"
+      </canvas>
+      <div class="panel">
         <div class="row">
           <label>Global Rotate (Y)</label>
           <input id="globalRotSlide" type="range" min="0" max="360" value="0"/>
           <span id="globalRotVal">0</span>
         </div>
-
         <div class="row">
           <label>Hip</label>
           <input id="hipSlide" type="range" min="-60" max="60" value="0"/>
           <span id="hipVal">0</span>
         </div>
-
         <div class="row">
           <label>Knee</label>
           <input id="kneeSlide" type="range" min="-60" max="60" value="0"/>
           <span id="kneeVal">0</span>
         </div>
-
         <div class="row">
           <label>Ankle</label>
           <input id="ankleSlide" type="range" min="-60" max="60" value="0"/>
           <span id="ankleVal">0</span>
         </div>
-
         <div class="row">
           <label>Head</label>
           <input id="headSlide" type="range" min="-60" max="60" value="0"/>
           <span id="headVal">0</span>
         </div>
-
         <div class="row">
           <button id="animButton">Animation: OFF</button>
         </div>
-
-        <div class="row">
-          <label>Performance</label>
-          <span class="mono" id="fps">—</span>
+        <div id="fpsBox">
+        <div class="fpsTitle">Performance</div>
+        <div class="fpsValue">FPS: <span id="fps">--</span></div>
+        <div class="msValue">Frame: <span id="ms">--</span> ms</div>
         </div>
       </div>
     </div>

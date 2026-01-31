@@ -1,6 +1,3 @@
-
-// HelloPoint1.js (c) 2012 matsuda
-// Vertex shader program
 var vertexShaderSource = `
   attribute vec3 a_Position;
   uniform mat4 u_ModelMatrix;
@@ -9,7 +6,6 @@ var vertexShaderSource = `
     gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
   }
 `;
-// Fragment shader program
 var fragmentShaderSource = `
   precision mediump float;
   uniform vec4 u_FragColor;
@@ -17,7 +13,7 @@ var fragmentShaderSource = `
     gl_FragColor = u_FragColor;
   }
 `;
-// global variables
+//global variables
 let canvas, gl;
 let aPosition, uFragColor, uModelMatrix, uGlobalRotateMatrix;
 let triangleVertexBuffer = null;
@@ -34,7 +30,10 @@ let gAnkleAngleUI = 0;
 //3rd level joint + extra animated parts
 let gAnkleAngle = 0;
 let gHeadYaw = 0;
+let gHeadYawUI = 0;
 let gTailAngle = 0;
+let gBlink = 0;
+let gMouthOpen = 0;
 let gEarFlap = 0;
 //mouse control rotation
 let gMouseYaw = 0;
@@ -47,20 +46,10 @@ let g_fpsSmoothed = 0;
 //non-cube primitive (cylinder)
 let cylVertexBuffer = null;
 let cylVertCount = 0;
-//Brush modes
-const brushSquare = 0;
-const brushTriangle = 1;
-const brushCircle = 2;
-// Default brush and settings
-let selectedBrushType = brushSquare;
-let selectedColorRgba = [1, 1, 1, 1];
-let selectedSize = 10;
-let selectedCircleSegments = 12;
-const brushEraser = 3;
-let selectedRotationDeg = 0;
-let eraserSize = 20; // in pixels
 //List holding all shapes that needs to be rendered
 let shapes = [];
+let fpsFrameCount = 0;
+let fpsLastTime = performance.now();
 const CUBE_VERTS = new Float32Array([
   //Front (+Z)
   -0.5,-0.5, 0.5,   0.5,-0.5, 0.5,   0.5, 0.5, 0.5,
@@ -127,22 +116,26 @@ function initCylinderBuffer(){
 }
 function setupWebGl(){
   canvas = document.getElementById("webgl");
+  if(!canvas){
+    console.log("Canvas #webgl not found (check your HTML).");
+    return;
+  }
   gl = canvas.getContext("webgl", {preserveDrawingBuffer: true});
   if(!gl){
     console.log("Failed to get WebGL context");
     return;
   }
+  gl.viewport(0, 0, canvas.width, canvas.height);
   gl.enable(gl.DEPTH_TEST);
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(0.53, 0.81, 0.92, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }
 function connectVariablesToGlsl(){
-  //Compile/link shaders FIRST so gl.program exists
   if(!initShaders(gl, vertexShaderSource, fragmentShaderSource)){
     console.log("Failed to initialize shaders");
     return;
   }
-  //Get attribute/uniform locations
+  //Get attribute and uniform locations
   aPosition = gl.getAttribLocation(gl.program, "a_Position");
   if(aPosition < 0){
     console.log("Failed to get attribute location: a_Position");
@@ -159,12 +152,6 @@ function connectVariablesToGlsl(){
     console.log("Failed to get matrix uniform(s)");
     return;
   }
-  //Create shared triangle buffer
-  triangleVertexBuffer = gl.createBuffer();
-  if (!triangleVertexBuffer) {
-    console.log("Failed to create shared triangle buffer");
-    return;
-  }
   //cube buffer (ADD)
   if(!initCubeBuffer()){
     return;
@@ -178,19 +165,7 @@ function connectVariablesToGlsl(){
   gl.uniformMatrix4fv(uModelMatrix, false, I.elements);
   gl.uniformMatrix4fv(uGlobalRotateMatrix, false, I.elements);
 }
-function renderAllShapes(){
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  const I = new Matrix4();
-  gl.uniformMatrix4fv(uModelMatrix, false, I.elements);
-  gl.uniformMatrix4fv(uGlobalRotateMatrix, false, I.elements);
-  for(const shape of pictureShapes){
-    shape.render();
-  }
-  for (const shape of shapes){
-    shape.render();
-  }
-}
-//drawCube + scene render (ADD)
+//drawCube and scene render (ADD)
 function drawCube(M, color){
   gl.uniformMatrix4fv(uModelMatrix, false, M.elements);
   gl.uniform4f(uFragColor, color[0], color[1], color[2], color[3]);
@@ -209,12 +184,12 @@ function drawCylinder(M, color){
 }
 function drawLeg(root, x, z, hipDeg, kneeDeg, ankleDeg, legColor, hoofColor){
   const attachY = -0.05;
-  // hip frame (level 1)
+  //hip frame (level 1)
   const M = new Matrix4();
   M.set(root);
   M.translate(x, attachY, z);
-  M.rotate(hipDeg, 1, 0, 0);
-  // thigh
+  M.rotate(hipDeg, 0, 0, 1);
+  //thigh
   {
     const T = new Matrix4();
     T.set(M);
@@ -222,10 +197,10 @@ function drawLeg(root, x, z, hipDeg, kneeDeg, ankleDeg, legColor, hoofColor){
     T.scale(0.14, 0.24, 0.14);
     drawCube(T, legColor);
   }
-  // knee pivot (level 2)
+  //knee pivot level 2
   M.translate(0, -0.24, 0);
-  M.rotate(kneeDeg, 1, 0, 0);
-  // calf
+  M.rotate(kneeDeg, 0, 0, 1);
+  //calf
   {
     const C = new Matrix4();
     C.set(M);
@@ -233,49 +208,17 @@ function drawLeg(root, x, z, hipDeg, kneeDeg, ankleDeg, legColor, hoofColor){
     C.scale(0.13, 0.22, 0.13);
     drawCube(C, legColor);
   }
-  // ankle pivot (level 3)
+  //ankle pivot level 3
   M.translate(0, -0.22, 0);
-  M.rotate(ankleDeg, 1, 0, 0);
-  // hoof
+  M.rotate(ankleDeg, 0, 0, 1);
+  //hoof
   {
     const H = new Matrix4();
     H.set(M);
-    H.translate(0, -0.05, 0.02);
+    H.translate(0.02, -0.05, 0);
     H.scale(0.16, 0.10, 0.20);
     drawCube(H, hoofColor);
   }
-}
-function handleCanvasDraw(mouseEvent){
-  const [clipX, clipY] = mouseEventToClipSpace(mouseEvent);
-  if (selectedBrushType === brushEraser){
-    const radiusClip = (eraserSize / canvas.width) * 2.0;
-    eraseAt(clipX, clipY, radiusClip);
-    renderAllShapes();
-    return;
-  }
-  let shapeToAdd;
-  if (selectedBrushType === brushSquare){
-    shapeToAdd = new SquareShape();
-  }else if(selectedBrushType === brushTriangle){
-    shapeToAdd = new TriangleShape();
-  }else{
-    shapeToAdd = new CircleShape();
-    shapeToAdd.segments = selectedCircleSegments;
-  }
-  shapeToAdd.position = [clipX, clipY];
-  shapeToAdd.color = [...selectedColorRgba];
-  shapeToAdd.size = selectedSize;
-  shapeToAdd.rotationDeg = selectedRotationDeg;
-  shapes.push(shapeToAdd);
-  renderAllShapes();
-}
-function mouseEventToClipSpace(mouseEvent){
-  const rect = mouseEvent.target.getBoundingClientRect();
-  const pixelX = mouseEvent.clientX - rect.left;
-  const pixelY = mouseEvent.clientY - rect.top;
-  const clipX = (pixelX - canvas.width / 2) / (canvas.width / 2);
-  const clipY = (canvas.height / 2 - pixelY) / (canvas.height / 2);
-  return [clipX, clipY];
 }
 function addActionsForHtmlUi(){
   const globalSlide = document.getElementById("globalRotSlide");
@@ -308,230 +251,302 @@ function addActionsForHtmlUi(){
       if(!gAnimationOn) renderScene();
     });
   }
-  document.getElementById("animButton").onclick = ()=>{
-    gAnimationOn = !gAnimationOn;
-  };
-}
-function eraseAt(x, y, radiusClip){
-  const r2 = radiusClip * radiusClip;
-  shapes = shapes.filter(function (s) {
-    if (!s.position) return true;
-    const dx = s.position[0] - x;
-    const dy = s.position[1] - y;
-    return (dx*dx + dy*dy) > r2;
-  });
+  const animBtn = document.getElementById("animButton");
+  if(animBtn){
+    animBtn.onclick = ()=>{
+      gAnimationOn = !gAnimationOn;
+      if(!gAnimationOn){
+        gBlink = 0;
+        gMouthOpen = 0;
+      }
+      animBtn.innerText = gAnimationOn ? "Animation: ON" : "Animation: OFF";
+      renderScene();
+    };
+  }
+  const headSlide = document.getElementById("headSlide");
+  const headVal = document.getElementById("headVal");
+  if(headSlide){
+    headSlide.addEventListener("input",(ev)=>{
+      gHeadYawUI = Number(ev.target.value);
+      if(headVal) headVal.innerText = String(gHeadYawUI);
+      if(!gAnimationOn) renderScene();
+    });
+  }
 }
 function main(){
   setupWebGl();
   connectVariablesToGlsl();
   addActionsForHtmlUi();
-  canvas.onmousedown = handleCanvasDraw;
-  canvas.onmousemove = function (ev) {
-    if (ev.buttons === 1) {
-      handleCanvasDraw(ev);
+  if(!gl) return;
+  setupMouseControls();
+  renderScene();
+  requestAnimationFrame(tick);
+}
+function mouseEventToCanvasNorm(ev){
+  const rect = canvas.getBoundingClientRect();
+  const px = ev.clientX - rect.left;
+  const py = ev.clientY - rect.top;
+  const xNorm = (px / canvas.width) * 2 - 1;
+  const yNorm = (py / canvas.height) * 2 - 1;
+  return [xNorm, yNorm];
+}
+function updateMouseRotation(ev){
+  const [xNorm, yNorm] = mouseEventToCanvasNorm(ev);
+  gMouseYaw = xNorm * 180;
+  gMousePitch = -yNorm * 90;
+  renderScene();
+}
+function triggerPoke(){
+  gPokeStartMs = performance.now();
+}
+function setupMouseControls(){
+  let dragging = false;
+  canvas.addEventListener("mousedown", (ev)=>{
+    if(ev.shiftKey){
+      triggerPoke();
+      return;
     }
-  };
-  renderAllShapes();
+    dragging = true;
+    updateMouseRotation(ev);
+  });
+  canvas.addEventListener("mousemove", (ev)=>{
+    if(!dragging) return;
+    updateMouseRotation(ev);
+  });
+  window.addEventListener("mouseup", ()=>{ dragging = false; });
 }
-function degToRad(deg){
-  return (deg * Math.PI) / 180;
+function updateAnimationAngles(tSec, nowMs){
+  const pokeActive = (gPokeStartMs >= 0) && ((nowMs - gPokeStartMs) < 900);
+  if(pokeActive){
+    const u = (nowMs - gPokeStartMs)/900;
+    const wiggle = Math.sin(u * 10 * Math.PI);
+    gHeadYaw = 35 * wiggle;
+    gTailAngle = 60 * wiggle;
+    gEarFlap = 25 * Math.sin(u * 14 * Math.PI);
+    gHipAngle = -30;
+    gKneeAngle = 55;
+    gAnkleAngle = -25;
+    gMouthOpen = 0.9;
+    gBlink = (Math.sin(u * 12 * Math.PI) > 0.65) ? 1 : 0;
+    if(u > 0.98) gPokeStartMs = -1;
+    return;
+  }
+  //normal walk
+  const w = tSec * 4.0;
+  gHipAngle = 25 * Math.sin(w);
+  gKneeAngle = 35 * Math.max(0, Math.sin(w + Math.PI/2)) - 10;
+  gAnkleAngle = 18 * Math.sin(w + Math.PI/2);
+  gHeadYaw = 8 * Math.sin(tSec * 2.0);
+  gTailAngle = 18 * Math.sin(tSec * 6.0);
+  gEarFlap = 10 * Math.sin(tSec * 5.0);
+  //mouth open/close
+  gMouthOpen = 0.35 + 0.35 * Math.max(0, Math.sin(tSec * 4.0));
+  //blink envelope short blink every 2.4s
+  const period = 2.4;
+  const p = (tSec % period) / period;
+  if(p < 0.03) gBlink = p / 0.03; //closing
+  else if(p < 0.06) gBlink = 1 - (p - 0.03) / 0.03; //opening
+  else gBlink = 0;
 }
-
-function rotatePoint(x, y, cx, cy, rad){
-  const dx = x - cx;
-  const dy = y - cy;
-  const cosA = Math.cos(rad);
-  const sinA = Math.sin(rad);
-  return [cx + dx*cosA - dy*sinA, cy + dx*sinA + dy*cosA];
+function tick(nowMs) {
+  if (!g_lastMs) g_lastMs = nowMs;
+  const dt = nowMs - g_lastMs;
+  g_lastMs = nowMs;
+  updateFPS(dt);
+  if (gAnimationOn || (gPokeStartMs >= 0)) {
+    updateAnimationAngles(nowMs / 1000.0, nowMs);
+  }
+  renderScene();
+  requestAnimationFrame(tick);
 }
-class SquareShape{
-  constructor(){
-    this.position = [0, 0];
-    this.color = [1, 1, 1, 1];
-    this.size = 10;
-  }
-  render(){
-    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
-    gl.disableVertexAttribArray(aPosition);
-    gl.vertexAttrib3f(aPosition, this.position[0], this.position[1], 0);
-    gl.drawArrays(gl.POINTS, 0, 1);
-  }
-}
-function drawTriangleVertices(vertices){
-  gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
-  gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(aPosition);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
-}
-class TriangleShape{
-  constructor(){
-    this.position = [0, 0];
-    this.color = [1, 1, 1, 1];
-    this.size = 10;
-  }
-  render(){
-    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
-    const centerX = this.position[0];
-    const centerY = this.position[1];
-    const halfSize = this.size / 200;
-    // Base (unrotated) triangle vertices
-    let v0 = [centerX, centerY + halfSize];
-    let v1 = [centerX - halfSize, centerY - halfSize];
-    let v2 = [centerX + halfSize, centerY - halfSize];
-    // Rotate around center
-    const rad = degToRad(this.rotationDeg || 0);
-    v0 = rotatePoint(v0[0], v0[1], centerX, centerY, rad);
-    v1 = rotatePoint(v1[0], v1[1], centerX, centerY, rad);
-    v2 = rotatePoint(v2[0], v2[1], centerX, centerY, rad);
-    drawTriangleVertices([v0[0], v0[1], v1[0], v1[1], v2[0], v2[1]]);
-  }
-}
-class CircleShape{
-  constructor() {
-    this.position = [0, 0];
-    this.color = [1, 1, 1, 1];
-    this.size = 10;
-    this.segments = 12;
-  }
-  render(){
-    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
-    const centerX = this.position[0];
-    const centerY = this.position[1];
-    const radius = this.size / 200;
-    const angleStep = (2 * Math.PI) / this.segments;
-    for (let i = 0; i < this.segments; i++){
-      const angle0 = i * angleStep;
-      const angle1 = (i + 1) * angleStep;
-      const x0 = centerX + radius * Math.cos(angle0);
-      const y0 = centerY + radius * Math.sin(angle0);
-      const x1 = centerX + radius * Math.cos(angle1);
-      const y1 = centerY + radius * Math.sin(angle1);
-      drawTriangleVertices([centerX, centerY, x0, y0, x1, y1]);
-    }
-  }
-}
-class RawTriangle{
-  constructor(vertices, color){
-    this.vertices = vertices;
-    this.color = color;
-  }
-  render(){
-    gl.uniform4f(uFragColor, this.color[0], this.color[1], this.color[2], this.color[3]);
-    drawTriangleVertices(this.vertices);
-  }
-}
-function makeGridMapper(cols, rows, left, right, bottom, top){
-  const cellW = (right - left) / cols;
-  const cellH = (top - bottom) / rows;
-  return function cellToClip(col, row){
-    const x0 = left + col * cellW;
-    const x1 = x0 + cellW;
-    const y1 = top - row * cellH;
-    const y0 = y1 - cellH;
-    return [x0, y0, x1, y1];
-  };
-}
-function addRectTriangles(targetList, x0, y0, x1, y1, color){
-  targetList.push(new RawTriangle([x0, y0, x1, y0, x1, y1], color));
-  targetList.push(new RawTriangle([x0, y0, x1, y1, x0, y1], color));
-}
-function addRectTrianglesTwoTone(list, x0, y0, x1, y1, colorA, colorB){
-  list.push(new RawTriangle([x0, y0, x1, y0, x1, y1], colorA));
-  list.push(new RawTriangle([x0, y0, x1, y1, x0, y1], colorB));
-}
-//Referenced AI input on how to create the drawing 
-function drawMinecraftDiamondSword(){
-  pictureShapes = [];
-  // Grid area
-  const cols = 40;
-  const rows = 40;
-  const cellToClip = makeGridMapper(cols, rows, -0.75, 0.75, -0.9, 0.9);
-  function put(col, row, color){
-    const p = cellToClip(col, row);
-    addRectTriangles(pictureShapes, p[0], p[1], p[2], p[3], color);
-  }
-  function putTwoTone(col, row, colorA, colorB){
-    const p = cellToClip(col, row);
-    addRectTrianglesTwoTone(pictureShapes, p[0], p[1], p[2], p[3], colorA, colorB);
-  }
-  // Color palette
-  const outline = [0.05, 0.05, 0.07, 1.0];
-  const bladeHi = [0.70, 0.97, 0.97, 1.0];
-  const bladeMd = [0.30, 0.85, 0.85, 1.0];
-  const bladeLo = [0.12, 0.55, 0.60, 1.0];
-  const guardAu = [0.95, 0.80, 0.20, 1.0];
-  const guardSh = [0.70, 0.55, 0.12, 1.0];
-  const handleD = [0.35, 0.20, 0.10, 1.0];
-  const handleL = [0.55, 0.32, 0.16, 1.0];
-  // Secondary shades
-  const bladeHi2 = [0.55, 0.93, 0.93, 1.0];
-  const bladeMd2 = [0.22, 0.78, 0.80, 1.0];
-  const bladeLo2 = [0.10, 0.48, 0.55, 1.0];
-  const guardAu2 = [0.78, 0.62, 0.16, 1.0];
-  const guardSh2 = [0.55, 0.42, 0.10, 1.0];
-  const handleD2 = [0.25, 0.14, 0.07, 1.0];
-  const handleL2 = [0.40, 0.24, 0.12, 1.0];
-  const baseCol = 22;
-  const guardR = 22;
-  const guardC = baseCol;
-  const bladeLen = 16;
-  const bladeBaseR = guardR - 1;
-  // Blade
-  for (let i = 0; i < bladeLen; i++){
-    const c = baseCol;
-    const r = bladeBaseR - i;
-    put(c - 2, r, outline);
-    put(c + 2, r, outline);
-    putTwoTone(c - 1, r, bladeLo, bladeLo2);
-    putTwoTone(c, r, bladeMd, bladeMd2);
-    putTwoTone(c + 1, r, bladeHi, bladeHi2);
-  }
-  // Tip
+function renderScene(){
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  //global rotation uniform: slider + mouse
+  const G = new Matrix4();
+  G.rotate(gMousePitch, 1,0,0);
+  G.rotate(gAnimalGlobalRotation + gMouseYaw, 0,1,0);
+  gl.uniformMatrix4fv(uGlobalRotateMatrix, false, G.elements);
+  //colors
+  const grass = [0.35,0.70,0.35,1.0];
+  const wool  = [0.95,0.95,0.95,1.0];
+  const wool2 = [0.90,0.90,0.90,1.0];
+  const hoof  = [0.39, 0.40, 0.40, 1.0];
+  const eyeCol = [0.05,0.05,0.05,1.0];
+  const woolHead = [0.96, 0.96, 0.96, 1.0];
+  const woolTrim = [0.90, 0.90, 0.90, 1.0];
+  const faceTan  = [0.70, 0.62, 0.52, 1.0];
+  const nosePink = [0.95, 0.75, 0.80, 1.0];
+  const skin = [0.93, 0.82, 0.76, 1.0];
+  //ground
   {
-    const tipC = baseCol;
-    const tipR = bladeBaseR - bladeLen;
-    put(tipC, tipR, outline);
-    put(tipC - 1, tipR + 1, outline);
-    put(tipC + 1, tipR + 1, outline);
-    putTwoTone(tipC, tipR + 1, bladeMd, bladeMd2);
+    const M = new Matrix4();
+    M.translate(0,-0.75,0);
+    M.scale(3.0, 0.03, 3.0);
+    drawCube(M, grass);
   }
-  // Guard
-  for (let dx = -3; dx <= 3; dx++){
-    if (dx === 0 || dx === -1){
-      putTwoTone(guardC + dx, guardR, guardSh, guardSh2);
-    } else {
-      putTwoTone(guardC + dx, guardR, guardAu, guardAu2);
-    }
+  //root
+  const root = new Matrix4();
+  root.translate(0,-0.05,0);
+  //body
+  {
+    const M = new Matrix4();
+    M.set(root);
+    M.translate(0,0.22,0);
+    M.scale(0.85,0.55,0.55);
+    drawCube(M, wool);
   }
-  put(guardC - 4, guardR, outline);
-  put(guardC + 4, guardR, outline);
-  // Handle
-  const handleStartR = guardR + 1;
-  for (let i = 0; i < 10; i++){
-    const r = handleStartR + i;
-    putTwoTone(guardC - 1, r, handleD, handleD2);
-    putTwoTone(guardC, r, handleL, handleL2);
-    putTwoTone(guardC + 1, r, handleD, handleD2);
-    put(guardC - 2, r, outline);
-    put(guardC + 2, r, outline);
+  //elly shade
+  {
+    const M = new Matrix4();
+    M.set(root);
+    M.translate(0.05,0.18,0);
+    M.scale(0.78,0.40,0.48);
+    drawCube(M, wool2);
   }
-  const initialsA = [0.90, 0.90, 0.95, 1.0];
-  const initialsB = [0.60, 0.60, 0.75, 1.0];
-  const initialsCol = 30;
-  const initialsRow = 34;
-  function drawLetterJ(col0, row0){
-    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 0, initialsA, initialsB);
-    for (let dy = 1; dy < 5; dy++) putTwoTone(col0 + 4, row0 + dy, initialsA, initialsB);
-    for (let dx = 1; dx < 4; dx++) putTwoTone(col0 + dx, row0 + 5, initialsA, initialsB);
-    putTwoTone(col0 + 0, row0 + 4, initialsA, initialsB);
-    putTwoTone(col0 + 1, row0 + 4, initialsA, initialsB);
+  //head frame (pivot)
+  const headFrame = new Matrix4();
+  headFrame.set(root);
+  headFrame.translate(0.49, 0.26, 0);
+  const headYaw = (gAnimationOn || gPokeStartMs >= 0) ? gHeadYaw : gHeadYawUI;
+  headFrame.rotate(headYaw, 0, 1, 0);
+
+  //wool head block
+  {
+    const M = new Matrix4();
+    M.set(headFrame);
+    M.translate(0.10, 0.02, 0.00);
+    M.scale(0.34, 0.30, 0.34);
+    drawCube(M, woolHead);
   }
-  function drawLetterC(col0, row0){
-    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 0, initialsA, initialsB);
-    for (let dy = 1; dy < 5; dy++) putTwoTone(col0 + 0, row0 + dy, initialsA, initialsB);
-    for (let dx = 0; dx < 5; dx++) putTwoTone(col0 + dx, row0 + 5, initialsA, initialsB);
+  //ultra-thin flat face plate
+  {
+    const plateX = 0.27; //front location
+    const plateT = 0.02; //thickness (thin)
+    const plateH = 0.22;
+    const plateW = 0.26;
+    //face
+    const F = new Matrix4();
+    F.set(headFrame);
+    F.translate(plateX, -0.02, 0.00);
+    F.scale(plateT, plateH, plateW);
+    drawCube(F, faceTan);
+    const top = new Matrix4();
+    top.set(headFrame);
+    top.translate(plateX - 0.005, 0.11, 0.00);
+    top.scale(plateT + 0.01, 0.04, plateW + 0.04);
+    drawCube(top, woolTrim);
+    const bot = new Matrix4();
+    bot.set(headFrame);
+    bot.translate(plateX - 0.005, -0.15, 0.00);
+    bot.scale(plateT + 0.01, 0.04, plateW + 0.04);
+    drawCube(bot, woolTrim);
+    const side1 = new Matrix4();
+    side1.set(headFrame);
+    side1.translate(plateX - 0.005, -0.02, 0.15);
+    side1.scale(plateT + 0.01, plateH + 0.08, 0.04);
+    drawCube(side1, woolTrim);
+    const side2 = new Matrix4();
+    side2.set(headFrame);
+    side2.translate(plateX - 0.005, -0.02, -0.15);
+    side2.scale(plateT + 0.01, plateH + 0.08, 0.04);
+    drawCube(side2, woolTrim);
+    //subtle face shading stripe (optional)
+    const F2 = new Matrix4();
+    F2.set(headFrame);
+    F2.translate(plateX + 0.002, -0.02, 0.00);
+    F2.scale(plateT * 0.9, plateH * 0.85, plateW * 0.85);
+    drawCube(F2, skin);
   }
-  drawLetterJ(initialsCol, initialsRow);
-  drawLetterC(initialsCol + 6, initialsRow);
+  //eyes flat on the face plate, blink by shrinking Y
+  {
+    const eyeX = 0.279; //slightly in front of plate
+    const eyeYScale = 0.035 * (1.0 - 0.95 * gBlink) + 0.002; //blink
+    const E1 = new Matrix4();
+    E1.set(headFrame);
+    E1.translate(eyeX, 0.02, 0.095);
+    E1.scale(0.022, eyeYScale, 0.07);
+    drawCube(E1, eyeCol);
+    const E2 = new Matrix4();
+    E2.set(headFrame);
+    E2.translate(eyeX, 0.02, -0.095);
+    E2.scale(0.022, eyeYScale, 0.07);
+    drawCube(E2, eyeCol);
+  }
+  //nose with flat pink patch on face
+  {
+    const N = new Matrix4();
+    N.set(headFrame);
+    N.translate(0.279, -0.08, 0.00);
+    N.scale(0.022, 0.08, 0.12);
+    drawCube(N, nosePink);
+  }
+  //mouth
+  {
+    const mouthH = 0.01 + 0.03 * gMouthOpen;
+    const M = new Matrix4();
+    M.set(headFrame);
+    M.translate(0.279, -0.14 - 0.01 * gMouthOpen, 0.00);
+    M.scale(0.022, mouthH, 0.14);
+    drawCube(M, [0.90, 0.76, 0.76, 1.0]);
+  }
+  //ears
+  {
+    const earColor = [0.86, 0.86, 0.86, 1.0]; //slightly darker than head
+    const flap = (gAnimationOn||gPokeStartMs>=0) ? gEarFlap : 0;
+    const zOut = 0.20;
+    const sx = 0.06; //thickness (X)
+    const sy = 0.28; //length (Y)
+    const sz = 0.10; //thickness (Z)
+    //Attach near upper side of head
+    const attachX = 0.10;
+    const attachY = 0.16;
+    const centerY = attachY - sy * 0.5;
+    //Right ear (+Z)
+    const E1 = new Matrix4();
+    E1.set(headFrame);
+    E1.translate(attachX, centerY, +zOut);
+    E1.rotate(flap, 1, 0, 0);
+    E1.scale(sx, sy, sz);
+    drawCube(E1, earColor);
+    //Left ear (-Z)
+    const E2 = new Matrix4();
+    E2.set(headFrame);
+    E2.translate(attachX, centerY, -zOut);
+    E2.rotate(-flap, 1, 0, 0);
+    E2.scale(sx, sy, sz);
+    drawCube(E2, earColor);
+  }
+  //tail
+  {
+    const M = new Matrix4();
+    M.set(root);
+    M.translate(-0.455, 0.25, 0.00);
+    M.rotate((gAnimationOn||gPokeStartMs>=0) ? gTailAngle : 0, 0,0,1);
+    M.rotate(140, 0,0,1);
+    M.scale(0.10, 0.22, 0.10);
+    drawCylinder(M, wool2);
+  }
+  //joints use only when animation is off
+  const hip = gAnimationOn ? gHipAngle : gHipAngleUI;
+  const knee = gAnimationOn ? gKneeAngle : gKneeAngleUI;
+  const ankle = gAnimationOn ? gAnkleAngle : gAnkleAngleUI;
+  //4 legs, each has 3 levels thigh, calf, hoof
+  drawLeg(root,  0.34,  0.22,  hip,  knee, ankle, skin, hoof);
+  drawLeg(root,  0.34, -0.22, -hip,  knee, ankle, skin, hoof);
+  drawLeg(root, -0.34,  0.22, -hip,  knee, ankle, skin, hoof);
+  drawLeg(root, -0.34, -0.22,  hip,  knee, ankle, skin, hoof);
+}
+function updateFPS(dtMs) {
+  fpsFrameCount++;
+  const now = performance.now();
+  const elapsed = now - fpsLastTime;
+  if (elapsed >= 500) { 
+    const fps = (fpsFrameCount * 1000) / elapsed;
+    const fpsEl = document.getElementById("fps");
+    const msEl = document.getElementById("ms");
+    if (fpsEl) fpsEl.innerText = fps.toFixed(1);
+    if (msEl) msEl.innerText = dtMs.toFixed(2);
+    fpsFrameCount = 0;
+    fpsLastTime = now;
+  }
 }
